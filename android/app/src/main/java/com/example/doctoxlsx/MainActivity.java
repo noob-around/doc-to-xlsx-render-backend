@@ -1,8 +1,10 @@
 package com.example.doctoxlsx;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
@@ -45,8 +47,14 @@ public class MainActivity extends Activity {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private Button chooseButton;
+    private Button uploadButton;
+    private Button openButton;
     private ProgressBar progressBar;
+    private TextView fileNameText;
     private TextView statusText;
+    private Uri selectedFileUri;
+    private Uri savedWorkbookUri;
+    private String selectedFileName = "";
     private byte[] pendingWorkbook;
     private String pendingOutputName = "converted.xlsx";
 
@@ -69,25 +77,67 @@ public class MainActivity extends Activity {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setGravity(Gravity.CENTER_HORIZONTAL);
         root.setPadding(padding, padding, padding, padding);
+        root.setBackgroundColor(Color.rgb(248, 249, 251));
 
         TextView title = new TextView(this);
         title.setText(R.string.app_title);
-        title.setTextSize(22);
-        title.setGravity(Gravity.CENTER);
+        title.setTextColor(Color.rgb(31, 33, 41));
+        title.setTextSize(32);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setGravity(Gravity.START);
         root.addView(title, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         ));
 
+        TextView subtitle = new TextView(this);
+        subtitle.setText(R.string.app_subtitle);
+        subtitle.setTextColor(Color.rgb(101, 111, 115));
+        subtitle.setTextSize(18);
+        subtitle.setLineSpacing(dp(3), 1.0f);
+        LinearLayout.LayoutParams subtitleParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        subtitleParams.setMargins(0, dp(16), 0, dp(40));
+        root.addView(subtitle, subtitleParams);
+
+        chooseButton = new Button(this);
+        chooseButton.setText(R.string.choose_file);
+        chooseButton.setTextSize(18);
+        chooseButton.setTextColor(Color.WHITE);
+        chooseButton.setBackgroundColor(Color.rgb(67, 132, 128));
+        chooseButton.setOnClickListener(view -> openFilePicker());
+        root.addView(chooseButton, fullWidthParams(0, 0));
+
+        fileNameText = new TextView(this);
+        fileNameText.setText(R.string.no_file_selected);
+        fileNameText.setTextColor(Color.rgb(101, 111, 115));
+        fileNameText.setTextSize(17);
+        LinearLayout.LayoutParams fileParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        fileParams.setMargins(0, dp(28), 0, dp(24));
+        root.addView(fileNameText, fileParams);
+
+        uploadButton = new Button(this);
+        uploadButton.setText(R.string.upload_and_convert);
+        uploadButton.setTextSize(17);
+        uploadButton.setEnabled(false);
+        uploadButton.setOnClickListener(view -> uploadSelectedFile());
+        root.addView(uploadButton, fullWidthParams(0, 0));
+
         statusText = new TextView(this);
         statusText.setText(R.string.status_idle);
-        statusText.setTextSize(15);
+        statusText.setTextColor(Color.rgb(101, 111, 115));
+        statusText.setTextSize(18);
         statusText.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        statusParams.setMargins(0, dp(24), 0, dp(24));
+        statusParams.setMargins(0, dp(28), 0, dp(20));
         root.addView(statusText, statusParams);
 
         progressBar = new ProgressBar(this);
@@ -95,15 +145,24 @@ public class MainActivity extends Activity {
         progressBar.setVisibility(View.GONE);
         root.addView(progressBar);
 
-        chooseButton = new Button(this);
-        chooseButton.setText(R.string.choose_file);
-        chooseButton.setOnClickListener(view -> openFilePicker());
-        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+        openButton = new Button(this);
+        openButton.setText(R.string.open_generated_file);
+        openButton.setTextSize(17);
+        openButton.setEnabled(false);
+        openButton.setOnClickListener(view -> openSavedWorkbook());
+        root.addView(openButton, fullWidthParams(dp(28), 0));
+
+        TextView backendText = new TextView(this);
+        backendText.setText(R.string.backend_label);
+        backendText.setTextColor(Color.rgb(132, 142, 146));
+        backendText.setTextSize(14);
+        backendText.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams backendParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        buttonParams.setMargins(0, dp(24), 0, 0);
-        root.addView(chooseButton, buttonParams);
+        backendParams.setMargins(0, dp(48), 0, 0);
+        root.addView(backendText, backendParams);
 
         return root;
     }
@@ -131,7 +190,15 @@ public class MainActivity extends Activity {
         if (requestCode == REQUEST_PICK_FILE) {
             Uri fileUri = data.getData();
             if (fileUri != null) {
-                uploadFile(fileUri);
+                selectedFileUri = fileUri;
+                selectedFileName = getDisplayName(fileUri);
+                pendingOutputName = makeOutputName(selectedFileName);
+                savedWorkbookUri = null;
+                pendingWorkbook = null;
+                fileNameText.setText(selectedFileName);
+                uploadButton.setEnabled(true);
+                openButton.setEnabled(false);
+                statusText.setText(R.string.status_file_selected);
             }
             return;
         }
@@ -144,12 +211,19 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void uploadFile(Uri fileUri) {
+    private void uploadSelectedFile() {
+        if (selectedFileUri == null) {
+            showError(getString(R.string.error_no_file));
+            return;
+        }
+        uploadFile(selectedFileUri, selectedFileName);
+    }
+
+    private void uploadFile(Uri fileUri, String fileName) {
         setBusy(true, getString(R.string.status_reading));
 
         executor.execute(() -> {
             try {
-                String fileName = getDisplayName(fileUri);
                 byte[] fileBytes = readAllBytes(fileUri);
                 pendingOutputName = makeOutputName(fileName);
 
@@ -198,6 +272,7 @@ public class MainActivity extends Activity {
     private void openSavePicker() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         intent.setType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         intent.putExtra(Intent.EXTRA_TITLE, pendingOutputName);
         startActivityForResult(intent, REQUEST_CREATE_XLSX);
@@ -206,15 +281,43 @@ public class MainActivity extends Activity {
     private void saveWorkbook(Uri saveUri) {
         try (OutputStream outputStream = getContentResolver().openOutputStream(saveUri)) {
             if (outputStream == null) {
-                showError(getString(R.string.error_save, "Cannot open output file"));
+                showError(getString(R.string.error_save, getString(R.string.error_open_output)));
                 return;
             }
             outputStream.write(pendingWorkbook);
             pendingWorkbook = null;
+            savedWorkbookUri = saveUri;
+            takePersistableReadPermission(saveUri);
+            openButton.setEnabled(true);
             setBusy(false, getString(R.string.status_saved));
             Toast.makeText(this, R.string.status_saved, Toast.LENGTH_LONG).show();
         } catch (IOException e) {
             showError(getString(R.string.error_save, e.getMessage()));
+        }
+    }
+
+    private void takePersistableReadPermission(Uri uri) {
+        try {
+            getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (SecurityException ignored) {
+            // Some document providers grant temporary access only; immediate opening still works.
+        }
+    }
+
+    private void openSavedWorkbook() {
+        if (savedWorkbookUri == null) {
+            showError(getString(R.string.error_no_output));
+            return;
+        }
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(savedWorkbookUri, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        try {
+            startActivity(Intent.createChooser(intent, getString(R.string.open_with)));
+        } catch (ActivityNotFoundException e) {
+            showError(getString(R.string.error_no_viewer));
         }
     }
 
@@ -257,6 +360,8 @@ public class MainActivity extends Activity {
 
     private void setBusy(boolean busy, String message) {
         chooseButton.setEnabled(!busy);
+        uploadButton.setEnabled(!busy && selectedFileUri != null);
+        openButton.setEnabled(!busy && savedWorkbookUri != null);
         progressBar.setVisibility(busy ? View.VISIBLE : View.GONE);
         statusText.setText(message);
     }
@@ -268,5 +373,14 @@ public class MainActivity extends Activity {
 
     private int dp(int value) {
         return (int) (value * getResources().getDisplayMetrics().density);
+    }
+
+    private LinearLayout.LayoutParams fullWidthParams(int topMargin, int bottomMargin) {
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(56)
+        );
+        params.setMargins(0, topMargin, 0, bottomMargin);
+        return params;
     }
 }

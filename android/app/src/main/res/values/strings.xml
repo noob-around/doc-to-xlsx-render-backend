@@ -1,13 +1,24 @@
 <resources>
     <string name="app_name">文档转表格</string>
     <string name="app_title">文档转表格</string>
-    <string name="choose_file">Choose docx, doc, or txt</string>
-    <string name="status_idle">Select a document to convert.</string>
-    <string name="status_reading">Reading selected file...</string>
-    <string name="status_uploading">Uploading and converting...</string>
-    <string name="status_ready_to_save">Conversion complete. Choose where to save the XLSX.</string>
-    <string name="status_saved">XLSX saved.</string>
-    <string name="error_upload">Upload failed: %1$s</string>
-    <string name="error_server">Server error %1$d: %2$s</string>
-    <string name="error_save">Save failed: %1$s</string>
+    <string name="app_subtitle">选择 docx、doc 或 txt 文件，上传后自动生成 Excel 表格。</string>
+    <string name="choose_file">选择文件</string>
+    <string name="no_file_selected">尚未选择文件</string>
+    <string name="upload_and_convert">上传并生成表格</string>
+    <string name="open_generated_file">打开生成的表格</string>
+    <string name="backend_label">后端：https://doc-to-xlsx-backend.onrender.com</string>
+    <string name="status_idle">请选择要转换的文档</string>
+    <string name="status_file_selected">文件已选择</string>
+    <string name="status_reading">正在读取文件...</string>
+    <string name="status_uploading">正在上传并生成表格...</string>
+    <string name="status_ready_to_save">表格已生成，请选择保存位置</string>
+    <string name="status_saved">表格已保存</string>
+    <string name="open_with">打开表格</string>
+    <string name="error_no_file">请先选择文件</string>
+    <string name="error_no_output">还没有可打开的表格</string>
+    <string name="error_no_viewer">手机上没有可打开 Excel 表格的应用</string>
+    <string name="error_open_output">无法打开输出文件</string>
+    <string name="error_upload">上传失败：%1$s</string>
+    <string name="error_server">服务器错误 %1$d：%2$s</string>
+    <string name="error_save">保存失败：%1$s</string>
 </resources>

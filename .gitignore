@@ -1,0 +1,6 @@
+node_modules/
+.env
+.tmp/
+test-output/
+.tmp-server.pid
+npm-debug.log*

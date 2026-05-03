@@ -1,0 +1,30 @@
+{
+  "name": "ai-assisted-convertion-2",
+  "version": "1.0.0",
+  "description": "Backend service that converts docx/doc/txt files into xlsx workbooks with DeepSeek-assisted structuring.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node test/run-fixtures.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "fast-xml-parser": "^5.7.2",
+    "helmet": "^8.1.0",
+    "jszip": "^3.10.1",
+    "mammoth": "^1.12.0",
+    "morgan": "^1.10.1",
+    "multer": "^2.1.1",
+    "zod": "^4.4.2"
+  },
+  "overrides": {
+    "uuid": "^14.0.0"
+  }
+}

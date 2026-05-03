@@ -4,3 +4,7 @@ node_modules/
 test-output/
 .tmp-server.pid
 npm-debug.log*
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties

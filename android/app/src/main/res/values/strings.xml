@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Doc to XLSX</string>
+    <string name="app_title">Doc to XLSX</string>
+    <string name="choose_file">Choose docx, doc, or txt</string>
+    <string name="status_idle">Select a document to convert.</string>
+    <string name="status_reading">Reading selected file...</string>
+    <string name="status_uploading">Uploading and converting...</string>
+    <string name="status_ready_to_save">Conversion complete. Choose where to save the XLSX.</string>
+    <string name="status_saved">XLSX saved.</string>
+    <string name="error_upload">Upload failed: %1$s</string>
+    <string name="error_server">Server error %1$d: %2$s</string>
+    <string name="error_save">Save failed: %1$s</string>
+</resources>

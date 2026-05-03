@@ -29,6 +29,12 @@ Content-Type: multipart/form-data
 
 Returns the workbook JSON plan for debugging or frontend previews.
 
+## Android Client
+
+A minimal native Android client lives in `android/`. It lets a user pick a `.docx`, `.doc`, or `.txt` file, uploads it to the deployed Render backend, then saves the returned `.xlsx`.
+
+Open `android/` in Android Studio and run the `app` configuration.
+
 ## Local Run
 
 ```bash

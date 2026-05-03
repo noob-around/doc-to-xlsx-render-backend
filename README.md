@@ -2,6 +2,8 @@
 
 Node/Express backend for converting `.docx`, `.doc`, or `.txt` uploads into `.xlsx`.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/noob-around/doc-to-xlsx-render-backend)
+
 The service extracts document text and tables locally, asks DeepSeek to normalize the content into a workbook JSON plan when `DEEPSEEK_API_KEY` is configured, then generates the final workbook with ExcelJS. If no API key is configured, it still returns a deterministic fallback workbook from extracted tables or lines of text.
 
 ## API

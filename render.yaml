@@ -2,7 +2,10 @@ services:
   - type: web
     name: doc-to-xlsx-backend
     runtime: docker
-    plan: starter
+    repo: https://github.com/noob-around/doc-to-xlsx-render-backend.git
+    branch: main
+    region: singapore
+    plan: free
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
